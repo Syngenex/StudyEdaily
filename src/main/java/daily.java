@@ -1,39 +1,28 @@
 import okhttp3.*;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.sql.Time;
 import java.util.Base64;
 import java.util.List;
 
 public class daily {
 
-    private static List<String> num=List.of(new String[]{"num1","num2"});     //账号
-    private static List<String> psd=List.of(new String[]{"psd1","psd2"});    //密码
-    private static List<String> scopeKey=List.of(new String[]{"***","***"});      //scopeKey,自行抓包获取
-    private static List<String> entityKey=List.of(new String[]{"***","***"});     //entityKey,自行抓包获取
-    private static List<String> address=List.of(new String[]{"**省**市**区**村#经度值#纬度值", "**省**市**区**村#经度值#纬度值"});       //位置信息，经纬度值小数点后六位
+    private static List<String> num=List.of(new String[]{"111","202003030223"});     //账号
+    private static List<String> psd=List.of(new String[]{"111","****"});    //密码
+    private static List<String> scopeKey=List.of(new String[]{"111","****"});      //scopeKey,自行抓包获取
+    private static List<String> entityKey=List.of(new String[]{"111","****"});     //entityKey,自行抓包获取
+    private static List<String> address=List.of(new String[]{"111", "****#****#***"});       //位置信息，经纬度值小数点后六位
     private static String pushPlusKey="3d515bc0bb14410dba242b1b2c989f87";   //PushPlus推送Token
-    public static List<String> Cookie=null;      //cookie自动获取，不用填写
-    private static String failNum="";     //签到失败账号，不用填写
-
 
     public static void main(String[] args) throws UnsupportedEncodingException {
         for (int i=0; i<num.size(); i++){
-            Cookie=null;
+            List<String> Cookie = null;
             System.out.println((i+1)+".准备签到"+":"+num.get(i));
             Cookie=Login(num.get(i),psd.get(i));
-            if (Cookie==null){//登录失败
-                System.out.println(num.get(i)+"登录失败");
-                failNum=failNum+(num.get(i)+"，");
-            }else{//登录成功
-                Checked(scopeKey.get(i),entityKey.get(i),address.get(i),Cookie);
-                System.out.println("签到成功"+(i+1)+num.get(i)+"Success");
-            }
+            Checked(scopeKey.get(i),entityKey.get(i),address.get(i),Cookie);
+            System.out.println("签到成功"+(i+1)+num.get(i)+"Success");
         }
-        if (failNum!=""){
-            PushToPushPluse(pushPlusKey,"失败账号："+failNum.toString());
-        }else{
-            PushToPushPluse(pushPlusKey,"运行成功，为确保漏签请到APP查看是否成功签到");
-        }
+        PushToPushPluse(pushPlusKey,"运行成功，为确保漏签请到APP查看是否成功签到");
     }
 
     private static List Login(String num, String psd) throws UnsupportedEncodingException {
@@ -41,7 +30,7 @@ public class daily {
         final byte[] textByte = psd.getBytes("UTF-8");
         final String encod_psd = encoder.encodeToString(textByte);
 
-        List<String> cookie=null;
+        List<String> cookie = null;
         OkHttpClient okHttpClient=new OkHttpClient();
         FormBody formBody =new FormBody.Builder()
                 .add("loginName",num)
@@ -53,19 +42,18 @@ public class daily {
         Call call=okHttpClient.newCall(request);
         try {
             Response response=call.execute();
-            String str =response.body().string();
-            //判断是否登陆成功
-            if (str.contains("true")){
-                //获取cookie
-                if (response.isSuccessful()){
-                    Headers headers=response.headers();
-                    cookie= headers.values("Set-Cookie");
-                    System.out.println("Cookie"+cookie);
-                }
-                System.out.println(str.substring(str.indexOf("userName\":\"")+11,str.indexOf("\",\"userKey\""))+"登陆成功");
-            }else {
-                cookie=null;
-                //System.out.println("登录失败");
+            String str = String.valueOf(response.body());
+            System.out.println(str);
+//            //判断是否登陆成功
+//            if (str.indexOf("true")>=0){
+//                name=str.substring(str.indexOf("userName\":\"")+11,str.indexOf("\",\"userKey\""));
+//                System.out.println(str);
+//            }
+            //获取cookie
+            if (response.isSuccessful()){
+                Headers headers=response.headers();
+                cookie= headers.values("Set-Cookie");
+                System.out.println("Cookie"+cookie);
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -86,15 +74,7 @@ public class daily {
                 .post(formBody)
                 .addHeader("Cookie",Cookie.get(0))
                 .build();
-        Call call=okHttpClient.newCall(request);
-        try {
-            Response response=call.execute();
-            String str =response.body().string();
-            System.out.println("签到成功:"+str);
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.out.println("未知错误:"+e);
-        }
+        okHttpClient.newCall(request);
     }
 
     private static void PushToPushPluse(String pushPlusKey,String sayToPush){
@@ -103,13 +83,13 @@ public class daily {
                 .add("token",pushPlusKey)
                 .add("content",sayToPush).build();
         Request request =new Request.Builder()
-                .url("http://www.pushplus.plus/send")
+                .url("http://www.pushplus.plus/send?title=得实签到")
                 .post(formBody)
                 .build();
         Call call=okHttpClient.newCall(request);
         try {
             Response response=call.execute();
-            String str =response.body().string();
+            String str = String.valueOf(response.body());
             System.out.println(str);
         } catch (IOException e) {
             e.printStackTrace();
