@@ -1,28 +1,27 @@
 import okhttp3.*;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.sql.Time;
 import java.util.Base64;
 import java.util.List;
 
 public class daily {
+    private static String[] num= new String[]{"******"};     //账号
+    private static String[] psd=new String[]{"******"};    //密码
+    private static String[] scopeKey=new String[]{"******"};      //scopeKey,自行抓包获取
+    private static String[] entityKey=new String[]{"******"};     //entityKey,自行抓包获取
+    private static String[] address=new String[]{"******#*#*"};       //位置信息，经纬度值小数点后六位
+    private static String pushPlusKey="******";   //PushPlus推送Token
 
-    private static List<String> num=List.of(new String[]{"111","202003030223"});     //账号
-    private static List<String> psd=List.of(new String[]{"111","****"});    //密码
-    private static List<String> scopeKey=List.of(new String[]{"111","****"});      //scopeKey,自行抓包获取
-    private static List<String> entityKey=List.of(new String[]{"111","****"});     //entityKey,自行抓包获取
-    private static List<String> address=List.of(new String[]{"111", "****#****#***"});       //位置信息，经纬度值小数点后六位
-    private static String pushPlusKey="3d515bc0bb14410dba242b1b2c989f87";   //PushPlus推送Token
-
-    public static void main(String[] args) throws UnsupportedEncodingException {
-        for (int i=0; i<num.size(); i++){
+    public static void main(String[] args) throws UnsupportedEncodingException, InterruptedException {
+        for (int i = 0; i< num.length; i++){
             List<String> Cookie = null;
-            System.out.println((i+1)+".准备签到"+":"+num.get(i));
-            Cookie=Login(num.get(i),psd.get(i));
-            Checked(scopeKey.get(i),entityKey.get(i),address.get(i),Cookie);
-            System.out.println("签到成功"+(i+1)+num.get(i)+"Success");
+            System.out.println((i+1)+".准备签到"+":"+ num[i]);
+            Cookie=Login(num[i], psd[i]);
+            Thread.sleep(10000);
+            Checked(scopeKey[i], entityKey[i], address[i],Cookie);
+            System.out.println("签到成功"+(i+1)+ num[i]);
         }
-        PushToPushPluse(pushPlusKey,"运行成功，为确保漏签请到APP查看是否成功签到");
+        PushToPushPluse(pushPlusKey,"程序运行成功，并不代表签到成功，为确保漏签请到APP查看是否成功签到");
     }
 
     private static List Login(String num, String psd) throws UnsupportedEncodingException {
@@ -42,13 +41,8 @@ public class daily {
         Call call=okHttpClient.newCall(request);
         try {
             Response response=call.execute();
-            String str = String.valueOf(response.body());
+            String str = response.body().string();
             System.out.println(str);
-//            //判断是否登陆成功
-//            if (str.indexOf("true")>=0){
-//                name=str.substring(str.indexOf("userName\":\"")+11,str.indexOf("\",\"userKey\""));
-//                System.out.println(str);
-//            }
             //获取cookie
             if (response.isSuccessful()){
                 Headers headers=response.headers();
@@ -74,7 +68,14 @@ public class daily {
                 .post(formBody)
                 .addHeader("Cookie",Cookie.get(0))
                 .build();
-        okHttpClient.newCall(request);
+        Call call=okHttpClient.newCall(request);
+        try {
+            Response response=call.execute();
+            String str = response.body().string();
+            System.out.println(str);
+        } catch (IOException e) {
+            System.out.println("超时，但是可以签到成功");
+        }
     }
 
     private static void PushToPushPluse(String pushPlusKey,String sayToPush){
@@ -83,13 +84,14 @@ public class daily {
                 .add("token",pushPlusKey)
                 .add("content",sayToPush).build();
         Request request =new Request.Builder()
-                .url("http://www.pushplus.plus/send?title=得实签到")
+                //.url("http://www.pushplus.plus/send?title=得实签到")
+                .url("http://www.pushplus.plus/send?title=得实签到&topic=2020030302")
                 .post(formBody)
                 .build();
         Call call=okHttpClient.newCall(request);
         try {
             Response response=call.execute();
-            String str = String.valueOf(response.body());
+            String str = response.body().string();
             System.out.println(str);
         } catch (IOException e) {
             e.printStackTrace();
