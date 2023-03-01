@@ -1,23 +1,29 @@
 import okhttp3.*;
+
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.Base64;
 import java.util.List;
+import java.util.Properties;
 
 public class daily {
-    private static String[] num= new String[]{"******"};     //账号
-    private static String[] psd=new String[]{"******"};    //密码
-    private static String[] scopeKey=new String[]{"******"};      //scopeKey,自行抓包获取
-    private static String[] entityKey=new String[]{"******"};     //entityKey,自行抓包获取
-    private static String[] address=new String[]{"******#*#*"};       //位置信息，经纬度值小数点后六位
-    private static String pushPlusKey="******";   //PushPlus推送Token
+    private static String[] num= new String[]{};
+    private static String[] psd=new String[]{};
+    private static String[] scopeKey=new String[]{};
+    private static String[] entityKey=new String[]{};
+    private static String[] address=new String[]{};
+    private static String pushPlusKey="";
 
     public static void main(String[] args) throws UnsupportedEncodingException, InterruptedException {
+        loadConfig();
         for (int i = 0; i< num.length; i++){
             List<String> Cookie = null;
             System.out.println((i+1)+".准备签到"+":"+ num[i]);
             Cookie=Login(num[i], psd[i]);
-            Thread.sleep(10000);
+            Thread.sleep(10000+(int)(Math.random()*180000));
             Checked(scopeKey[i], entityKey[i], address[i],Cookie);
             System.out.println("签到成功"+(i+1)+ num[i]);
         }
@@ -84,7 +90,6 @@ public class daily {
                 .add("token",pushPlusKey)
                 .add("content",sayToPush).build();
         Request request =new Request.Builder()
-                //.url("http://www.pushplus.plus/send?title=得实签到")
                 .url("http://www.pushplus.plus/send?title=得实签到&topic=2020030302")
                 .post(formBody)
                 .build();
@@ -97,6 +102,24 @@ public class daily {
             e.printStackTrace();
             System.out.println("推送错误:"+e);
         }
+    }
+
+    private static void loadConfig(){
+        Properties properties = new Properties();
+        try (FileInputStream inputStream = new FileInputStream("src/config.properties")) {
+            // 使用UTF-8编码读取文件内容
+            InputStreamReader reader = new InputStreamReader(inputStream, Charset.forName("UTF-8"));
+            properties.load(reader);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        num = properties.getProperty("num").split(",");
+        psd = properties.getProperty("psd").split(",");
+        scopeKey = properties.getProperty("scopeKey").split(",");
+        entityKey = properties.getProperty("entityKey").split(",");
+        address = properties.getProperty("address").split(",");
+        pushPlusKey = properties.getProperty("pushPlusKey");
     }
 
 }
