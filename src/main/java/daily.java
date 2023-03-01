@@ -26,7 +26,7 @@ public class daily {
             Cookie=Login(num[i], psd[i]);
             Thread.sleep(10000+(int)(Math.random()*180000));
             Checked(scopeKey[i], entityKey[i], address[i],Cookie);
-            log+=("签到成功"+(i+1)+ num[i])
+            log+=("签到成功"+(i+1)+ num[i]);
             System.out.println("签到成功"+(i+1)+ num[i]);
         }
         PushToPushPluse(pushPlusKey,log+"\n程序运行成功，并不代表签到成功，为确保漏签请到APP查看是否成功签到");
