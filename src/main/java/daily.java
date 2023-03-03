@@ -16,6 +16,7 @@ public class daily {
     private static String[] entityKey=new String[]{};
     private static String[] address=new String[]{};
     private static String pushPlusKey="";
+    private static String pushPlusKeyGroup="";
 
     public static void main(String[] args) throws UnsupportedEncodingException, InterruptedException {
         String log ="";
@@ -23,16 +24,16 @@ public class daily {
         for (int i = 0; i< num.length; i++){
             List<String> Cookie = null;
             System.out.println((i+1)+".准备签到"+":"+ num[i]);
-            Cookie=Login(num[i], psd[i]);
+            Cookie=login(num[i], psd[i]);
             Thread.sleep(10000+(int)(Math.random()*180000));
-            Checked(scopeKey[i], entityKey[i], address[i],Cookie);
-            log+=("签到成功"+(i+1)+ num[i]);
-            System.out.println("签到成功"+(i+1)+ num[i]);
+            checked(scopeKey[i], entityKey[i], address[i],Cookie);
+            log+=("\n"+(i+1)+".签到成功"+":"+ num[i]);
+            System.out.println((i+1)+".签到成功"+":"+ num[i]);
         }
-        PushToPushPluse(pushPlusKey,log+"\n程序运行成功，并不代表签到成功，为确保漏签请到APP查看是否成功签到");
+        pushToPushPlus(pushPlusKey,log+"\n\n程序运行成功，并不代表签到成功，为确保漏签请到APP查看是否成功签到");
     }
 
-    private static List Login(String num, String psd) throws UnsupportedEncodingException {
+    private static List login(String num, String psd) throws UnsupportedEncodingException {
         final Base64.Encoder encoder = Base64.getEncoder();
         final byte[] textByte = psd.getBytes("UTF-8");
         final String encod_psd = encoder.encodeToString(textByte);
@@ -50,7 +51,7 @@ public class daily {
         try {
             Response response=call.execute();
             String str = response.body().string();
-            System.out.println(str);
+            //System.out.println(str);
             //获取cookie
             if (response.isSuccessful()){
                 Headers headers=response.headers();
@@ -64,7 +65,7 @@ public class daily {
         return cookie;
     }
 
-    private static void Checked(String scopeKey,String entityKey,String address,List<String> Cookie){
+    private static void checked(String scopeKey,String entityKey,String address,List<String> Cookie){
         OkHttpClient okHttpClient=new OkHttpClient();
         FormBody formBody =new FormBody.Builder()
                 .add("scopeKey",scopeKey)
@@ -86,20 +87,24 @@ public class daily {
         }
     }
 
-    private static void PushToPushPluse(String pushPlusKey,String sayToPush){
+    private static void pushToPushPlus(String pushPlusKey,String sayToPush){
         OkHttpClient okHttpClient=new OkHttpClient();
         FormBody formBody =new FormBody.Builder()
                 .add("token",pushPlusKey)
                 .add("content",sayToPush).build();
         Request request =new Request.Builder()
-                .url("http://www.pushplus.plus/send?title=得实签到&topic=2020030302")
+                .url("http://www.pushplus.plus/send?title=得实签到&topic="+pushPlusKeyGroup)
                 .post(formBody)
                 .build();
         Call call=okHttpClient.newCall(request);
         try {
             Response response=call.execute();
             String str = response.body().string();
-            System.out.println(str);
+            if (str.equals("200")){
+                System.out.println("PushPlus推送成功");
+            }else {
+                System.out.println("推送返回内容:"+str);
+            }
         } catch (IOException e) {
             e.printStackTrace();
             System.out.println("推送错误:"+e);
@@ -108,7 +113,7 @@ public class daily {
 
     private static void loadConfig(){
         Properties properties = new Properties();
-        try (FileInputStream inputStream = new FileInputStream("src/config.properties")) {
+        try (FileInputStream inputStream = new FileInputStream("config.properties")) {
             // 使用UTF-8编码读取文件内容
             InputStreamReader reader = new InputStreamReader(inputStream, Charset.forName("UTF-8"));
             properties.load(reader);
@@ -122,6 +127,7 @@ public class daily {
         entityKey = properties.getProperty("entityKey").split(",");
         address = properties.getProperty("address").split(",");
         pushPlusKey = properties.getProperty("pushPlusKey");
+        pushPlusKeyGroup = properties.getProperty("pushPlusKeyGroup");
     }
 
 }
